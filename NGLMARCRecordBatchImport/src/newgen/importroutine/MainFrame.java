@@ -12,11 +12,26 @@ package newgen.importroutine;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
+import java.util.StringTokenizer;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamReader;
+import newgenlib.marccomponent.conversion.Converter;
+import newgenlib.marccomponent.marcmodel.CatalogMaterialDescription;
+import newgenlib.marccomponent.marcmodel.ControlField;
+import newgenlib.marccomponent.marcmodel.Field;
+import newgenlib.marccomponent.marcmodel.FixedFieldProcessor;
+import newgenlib.marccomponent.marcmodel.Leader;
+import newgenlib.marccomponent.marcmodel.SubField;
+import org.marc4j.marc.Subfield;
 
 /**
  *
@@ -100,7 +115,7 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
-        JFileChooser jfc = new JFileChooser();
+        JFileChooser jfc = new JFileChooser("/home/siddartha/Share");
         int option = jfc.showOpenDialog(this);
         if (option == JFileChooser.APPROVE_OPTION) {
             jTextField1.setText(jfc.getSelectedFile().getAbsolutePath());
@@ -116,7 +131,7 @@ public class MainFrame extends javax.swing.JFrame {
 
             @Override
             protected Object doInBackground() throws Exception {
-                BufferedReader br = new BufferedReader(new FileReader(jTextField1.getText()));
+                BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(jTextField1.getText())));
                 while (br.ready()) {
                     String line = br.readLine();
                     if (line.indexOf(recorDelim) != -1) {
@@ -134,20 +149,151 @@ public class MainFrame extends javax.swing.JFrame {
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
         // TODO add your handling code here:
         try {
-            RandomAccessFile raf = new RandomAccessFile(new File(jTextField1.getText()), "r");
-            long len = raf.length();
-            raf.seek(0);
-            for (int i = 0; i < len; i++) {
-                char ch = raf.readChar();                
-                System.out.println(ch);
-            }
-            
-            raf.close();
+            FileInputStream fis = new FileInputStream("/home/siddartha/Share/abc.xml");
+            XMLInputFactory factory = XMLInputFactory.newInstance();
+            XMLStreamReader parser = factory.createXMLStreamReader(fis);
+            int recordCount = 0;
+            CatalogMaterialDescription cmd = null;
+            ArrayList alfields = null;
+            ArrayList alControlFields = null;
+            ArrayList alsubfields = null;
+            ControlField currentcf = null;
+            Field currentField = null;
+            SubField currentSF = null;
+            char currentSFIden = ' ';
+            String currentSFData = "";
+            FixedFieldProcessor ffp = null;
+            String currentLeader = "";
+            String currently = "";
+            while (parser.hasNext()) {
+                int event = parser.getEventType();
+//                System.out.println(parser.getEventType());
+                String nameele = parser.getLocalName();
+
+                //System.out.println("nameele: " + nameele);
+                switch (event) {
+                    case XMLStreamConstants.START_ELEMENT:
+                        if (nameele != null) {
+                            if (nameele.equals("record")) {
+                                ffp=new FixedFieldProcessor();
+                                cmd = new CatalogMaterialDescription();
+                                currentLeader = "";
+                                alfields = new ArrayList();
+                                alControlFields = new ArrayList();
+                                recordCount++;
+                            } else if (nameele.equals("controlfield")) {
+                                currently = "controlfield";
+//                                System.out.println("controlfield staretd");
+                                int count = parser.getAttributeCount();
+                                String tag = "";
+                                for (int i = 0; i < count; i++) {
+                                    tag = parser.getAttributeValue(i);
+//                                    System.out.println(parser.getAttributeName(i) + "=" + parser.getAttributeValue(i));
+                                }
+                                currentcf = new ControlField();
+                                currentcf.setTag(tag);
+                            } else if (nameele.equals("datafield")) {
+                                int count = parser.getAttributeCount();
+                                String tag = "";
+                                String i1 = "";
+                                String i2 = "";
+                                for (int i = 0; i < count; i++) {
+                                    String attrname = parser.getAttributeName(i).getLocalPart();
+                                    String aattrval = parser.getAttributeValue(i);
+                                    if (attrname.equals("tag")) {
+                                        tag = aattrval;
+                                    }
+                                    if (attrname.equals("ind1")) {
+                                        i1 = aattrval;
+                                    }
+                                    if (attrname.equals("ind2")) {
+                                        i2 = aattrval;
+                                    }
+
+                                }
+
+                                char i1c = ' ';
+                                char i2c = ' ';
+                                if (i1.length() > 0) {
+                                    i1c = i1.charAt(0);
+                                }
+                                if (i2.length() > 0) {
+                                    i2c = i2.charAt(0);
+                                }
+                                currentField = new Field(tag, i1c, i2c);
+                                alsubfields = new ArrayList();
+                            } else if (nameele.equals("subfield")) {
+                                currently = "subfield";
+                                int count = parser.getAttributeCount();
+                                String code = "";
+                                for (int i = 0; i < count; i++) {
+                                    code = parser.getAttributeValue(i);
+                                }
+                                currentSFIden = code.charAt(0);
+                            } else if (nameele.equals("leader")) {
+                                currently = "leader";
+                                
+                            }
+
+//                        System.out.println("Starting: "+parser.getLocalName());
+                        }
+                        break;
+                    case XMLStreamConstants.END_ELEMENT:
+                        if (nameele != null) {
+                            if (nameele.equals("controlfield")) {
+                                alControlFields.add(currentcf);
+                            } else if (nameele.equals("subfield")) {
+                                currentSF = new SubField(currentSFIden, currentSFData);
+                                alsubfields.add(currentSF);
+                            } else if (nameele.equals("datafield")) {
+                                currentField.addSubField(alsubfields);
+                                alfields.add(currentField);
+                            } else if (nameele.equals("record")) {
+                                cmd.setLeader(currentLeader);
+                                cmd.addControlField(alControlFields);
+                                cmd.addField(alfields);
+                                cmd.setFixedField(ffp.fxld);
+                                System.out.println(cmd);
+                            }else if (nameele.equals("leader")) {
+                                ffp.startLeader(new Leader(currentLeader));
+                            }
+                        }
+                        break;
+                    case XMLStreamConstants.CHARACTERS:
+                        if (currently.equals("controlfield")) {
+                            currentcf.setData(parser.getText());
+                            ffp.startControlField(currentcf.getTag(), currentcf.getData());
+                        }
+                        if (currently.equals("subfield")) {
+                            currentSFData = parser.getText();
+                        }
+                        if (currently.equals("leader")) {
+                            currentLeader = parser.getText();
+                        }
+
+                        break;
+                    case XMLStreamConstants.CDATA:
+                        break;
+                } // end switch
+
+                parser.next();
+            } // end while
+            parser.close();
+            System.out.println("Total number of records: " + recordCount);
         } catch (Exception e) {
+            e.printStackTrace();
         }
-        
-        
+
+
     }//GEN-LAST:event_jButton3ActionPerformed
+
+//    public CatalogMaterialDescription parseRecord(String rec) {
+//        System.out.println(rec);
+//        System.out.println("****************************************************");
+//        CatalogMaterialDescription cmd = new Converter().getMarcModelFromMarc(rec);
+//        System.out.println(cmd);
+//        return cmd;
+//    }
     public int countOccurrences(String haystack, char needle) {
         int count = 0;
         for (int i = 0; i < haystack.length(); i++) {
