@@ -16,11 +16,14 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
+import javax.swing.filechooser.FileFilter;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamReader;
@@ -31,7 +34,21 @@ import newgenlib.marccomponent.marcmodel.Field;
 import newgenlib.marccomponent.marcmodel.FixedFieldProcessor;
 import newgenlib.marccomponent.marcmodel.Leader;
 import newgenlib.marccomponent.marcmodel.SubField;
+import newgenlib.marccomponent.persistence.PersistMARCRecord;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.marc4j.marc.Subfield;
+import org.verus.ngl.indexing.CorporateNameSolrIndexCreator;
+import org.verus.ngl.indexing.FormGenreSolrIndexCreator;
+import org.verus.ngl.indexing.MeetingNameSolrIndexCreator;
+import org.verus.ngl.indexing.NewBibliographicSolrIndexCreator;
+import org.verus.ngl.indexing.PersonalNameSolrIndexCreator;
+import org.verus.ngl.indexing.SubGeoNameSolrIndexCreator;
+import org.verus.ngl.indexing.SubTopicSolrIndexCreator;
+import org.verus.ngl.indexing.UniformTitleSolrIndexCreator;
 
 /**
  *
@@ -56,6 +73,11 @@ public class MainFrame extends javax.swing.JFrame {
     private void initComponents() {
         java.awt.GridBagConstraints gridBagConstraints;
 
+        jPanel3 = new javax.swing.JPanel();
+        jLabel2 = new javax.swing.JLabel();
+        tfExcelSheet = new javax.swing.JTextField();
+        jButton4 = new javax.swing.JButton();
+        jButton5 = new javax.swing.JButton();
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jTextField1 = new javax.swing.JTextField();
@@ -67,9 +89,39 @@ public class MainFrame extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(new javax.swing.BoxLayout(getContentPane(), javax.swing.BoxLayout.Y_AXIS));
 
+        jPanel3.setLayout(new java.awt.GridBagLayout());
+
+        jLabel2.setText("Select the excel sheet");
+        jPanel3.add(jLabel2, new java.awt.GridBagConstraints());
+
+        tfExcelSheet.setColumns(15);
+        jPanel3.add(tfExcelSheet, new java.awt.GridBagConstraints());
+
+        jButton4.setText("...");
+        jButton4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton4ActionPerformed(evt);
+            }
+        });
+        jPanel3.add(jButton4, new java.awt.GridBagConstraints());
+
+        jButton5.setText("Generate ISBNs text file for MARC Edit");
+        jButton5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton5ActionPerformed(evt);
+            }
+        });
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.gridwidth = 3;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        jPanel3.add(jButton5, gridBagConstraints);
+
+        getContentPane().add(jPanel3);
+
         jPanel1.setLayout(new java.awt.GridBagLayout());
 
-        jLabel1.setText("Select the MARC file");
+        jLabel1.setText("Select the MARC XML file");
         jPanel1.add(jLabel1, new java.awt.GridBagConstraints());
 
         jTextField1.setColumns(15);
@@ -116,6 +168,22 @@ public class MainFrame extends javax.swing.JFrame {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
         JFileChooser jfc = new JFileChooser("/home/siddartha/Share");
+        jfc.setFileFilter(new FileFilter() {
+
+            @Override
+            public boolean accept(File f) {
+                if (f.getName().contains("xml") || f.isDirectory()) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+            @Override
+            public String getDescription() {
+                return "(.xml) MARCXML";
+            }
+        });
         int option = jfc.showOpenDialog(this);
         if (option == JFileChooser.APPROVE_OPTION) {
             jTextField1.setText(jfc.getSelectedFile().getAbsolutePath());
@@ -131,13 +199,27 @@ public class MainFrame extends javax.swing.JFrame {
 
             @Override
             protected Object doInBackground() throws Exception {
-                BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(jTextField1.getText())));
-                while (br.ready()) {
-                    String line = br.readLine();
-                    if (line.indexOf(recorDelim) != -1) {
-                        int count = countOccurrences(line, recorDelim);
-                        recordCount += count;
+                try {
+                    System.out.println("jTextField1.getText() " + jTextField1.getText());
+                    FileInputStream fis = new FileInputStream(jTextField1.getText());
+                    XMLInputFactory factory = XMLInputFactory.newInstance();
+                    XMLStreamReader parser = factory.createXMLStreamReader(fis);
+                    int recordCountM = 0;
+                    while (parser.hasNext()) {
+                        String nameele = "";
+                        try {
+                            nameele = parser.getLocalName();
+                        } catch (Exception ex) {
+                        }
+                        if (parser.getEventType() == XMLStreamConstants.START_ELEMENT && nameele != null && nameele.equals("record")) {
+                            recordCountM++;
+                        }
+                        parser.next();
                     }
+                    parser.close();
+                    recordCount = recordCountM;
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
                 JOptionPane.showMessageDialog(null, "Found " + recordCount + " records", "Records count", JOptionPane.INFORMATION_MESSAGE);
                 return "";
@@ -149,6 +231,9 @@ public class MainFrame extends javax.swing.JFrame {
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
         // TODO add your handling code here:
         try {
+            Class.forName("org.postgresql.Driver");
+            Connection con = DriverManager.getConnection("jdbc:postgresql://localhost:5432/IITH", "newgenlib", "newgenlib");
+            PersistMARCRecord psm = new PersistMARCRecord("1", "1", "1", "1", "1", con, false);
             FileInputStream fis = new FileInputStream("/home/siddartha/Share/abc.xml");
             XMLInputFactory factory = XMLInputFactory.newInstance();
             XMLStreamReader parser = factory.createXMLStreamReader(fis);
@@ -165,17 +250,22 @@ public class MainFrame extends javax.swing.JFrame {
             FixedFieldProcessor ffp = null;
             String currentLeader = "";
             String currently = "";
+            String currentTag = "";
             while (parser.hasNext()) {
                 int event = parser.getEventType();
 //                System.out.println(parser.getEventType());
-                String nameele = parser.getLocalName();
+                String nameele = null;
+                try {
+                    nameele = parser.getLocalName();
+                } catch (Exception ex) {
+                }
 
                 //System.out.println("nameele: " + nameele);
                 switch (event) {
                     case XMLStreamConstants.START_ELEMENT:
                         if (nameele != null) {
                             if (nameele.equals("record")) {
-                                ffp=new FixedFieldProcessor();
+                                ffp = new FixedFieldProcessor();
                                 cmd = new CatalogMaterialDescription();
                                 currentLeader = "";
                                 alfields = new ArrayList();
@@ -222,6 +312,7 @@ public class MainFrame extends javax.swing.JFrame {
                                 }
                                 currentField = new Field(tag, i1c, i2c);
                                 alsubfields = new ArrayList();
+                                currentTag = tag;
                             } else if (nameele.equals("subfield")) {
                                 currently = "subfield";
                                 int count = parser.getAttributeCount();
@@ -232,7 +323,7 @@ public class MainFrame extends javax.swing.JFrame {
                                 currentSFIden = code.charAt(0);
                             } else if (nameele.equals("leader")) {
                                 currently = "leader";
-                                
+
                             }
 
 //                        System.out.println("Starting: "+parser.getLocalName());
@@ -247,14 +338,17 @@ public class MainFrame extends javax.swing.JFrame {
                                 alsubfields.add(currentSF);
                             } else if (nameele.equals("datafield")) {
                                 currentField.addSubField(alsubfields);
-                                alfields.add(currentField);
+                                if (!currentTag.startsWith("9")) {
+                                    alfields.add(currentField);
+                                }
                             } else if (nameele.equals("record")) {
                                 cmd.setLeader(currentLeader);
                                 cmd.addControlField(alControlFields);
                                 cmd.addField(alfields);
                                 cmd.setFixedField(ffp.fxld);
                                 System.out.println(cmd);
-                            }else if (nameele.equals("leader")) {
+                                saveRecord(cmd, psm);
+                            } else if (nameele.equals("leader")) {
                                 ffp.startLeader(new Leader(currentLeader));
                             }
                         }
@@ -283,17 +377,104 @@ public class MainFrame extends javax.swing.JFrame {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
+        indexDatabase();
 
     }//GEN-LAST:event_jButton3ActionPerformed
 
-//    public CatalogMaterialDescription parseRecord(String rec) {
-//        System.out.println(rec);
-//        System.out.println("****************************************************");
-//        CatalogMaterialDescription cmd = new Converter().getMarcModelFromMarc(rec);
-//        System.out.println(cmd);
-//        return cmd;
-//    }
+    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+        // TODO add your handling code here:
+        JFileChooser jfc = new JFileChooser();
+        jfc.addChoosableFileFilter(new FileFilter() {
+
+            @Override
+            public boolean accept(File f) {
+                if (f.getName().toLowerCase().contains("xls") || f.isDirectory()) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+            @Override
+            public String getDescription() {
+                return "xls";
+            }
+        });
+        jfc.addChoosableFileFilter(new FileFilter() {
+
+            @Override
+            public boolean accept(File f) {
+                if (f.getName().toLowerCase().contains("xlsx") || f.isDirectory()) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+            @Override
+            public String getDescription() {
+                return "xlsx";
+            }
+        });
+        int sel = jfc.showOpenDialog(this);
+        if (sel == JFileChooser.APPROVE_OPTION) {
+            tfExcelSheet.setText(jfc.getSelectedFile().getAbsolutePath());
+        }
+    }//GEN-LAST:event_jButton4ActionPerformed
+
+    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButton5ActionPerformed
+    public void indexDatabase() {
+        try {
+            NewBibliographicSolrIndexCreator.getInstance().deleteData();
+            NewBibliographicSolrIndexCreator.getInstance().indexingData();
+            CorporateNameSolrIndexCreator.getInstance().indexData();
+            FormGenreSolrIndexCreator.getInstance().indexData();
+            MeetingNameSolrIndexCreator.getInstance().indexData();
+            PersonalNameSolrIndexCreator.getInstance().indexData();
+            SubGeoNameSolrIndexCreator.getInstance().indexData();
+            SubTopicSolrIndexCreator.getInstance().indexData();
+            UniformTitleSolrIndexCreator.getInstance().indexData();
+        } catch (Exception exp) {
+            System.out.println("Error in indexing !!!!!!!!!!!");
+        }
+    }
+
+    public void insertAccessionNumbers() {
+        org.apache.poi.ss.usermodel.Workbook wb = null;
+        if (tfExcelSheet.getText().toLowerCase().endsWith("xls")) {
+            try {
+                wb = new HSSFWorkbook(new FileInputStream(tfExcelSheet.getText()));
+            } catch (Exception ex) {
+            }
+        } else if (tfExcelSheet.getText().toLowerCase().endsWith("xlsx")) {
+            try {
+                wb = new XSSFWorkbook(new FileInputStream(new File(tfExcelSheet.getText())));
+            } catch (Exception e) {
+            }
+        }
+        if(wb!=null){
+            Sheet sheet = wb.getSheetAt(0);
+            for (Row row : sheet) {
+                for (Cell cell : row) {
+                    // Do something here
+                    switch (cell.getCellType()) {
+                        
+                    }
+                    System.out.print("+++");
+                }
+                System.out.println("");
+                System.out.println("-----------------------------------------------New Row----------------------------------");
+            }
+        }
+    }
+
+    public void saveRecord(CatalogMaterialDescription cmd, PersistMARCRecord psm) {
+        System.out.println(cmd);
+        psm.persist3_0(cmd, "1", "3", "");
+    }
+
     public int countOccurrences(String haystack, char needle) {
         int count = 0;
         for (int i = 0; i < haystack.length(); i++) {
@@ -319,9 +500,14 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
+    private javax.swing.JButton jButton4;
+    private javax.swing.JButton jButton5;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
     private javax.swing.JTextField jTextField1;
+    private javax.swing.JTextField tfExcelSheet;
     // End of variables declaration//GEN-END:variables
 }
