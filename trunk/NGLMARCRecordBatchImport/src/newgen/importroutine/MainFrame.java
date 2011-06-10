@@ -10,16 +10,33 @@
  */
 package newgen.importroutine;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.RandomAccessFile;
+import java.io.Reader;
+import java.io.Writer;
+import java.net.MalformedURLException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.StringTokenizer;
+import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
@@ -40,6 +57,12 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocumentList;
 import org.marc4j.marc.Subfield;
 import org.verus.ngl.indexing.CorporateNameSolrIndexCreator;
 import org.verus.ngl.indexing.FormGenreSolrIndexCreator;
@@ -61,6 +84,7 @@ public class MainFrame extends javax.swing.JFrame {
     /** Creates new form MainFrame */
     public MainFrame() {
         initComponents();
+        dialogSaveISBNs.setSize(250, 100);
     }
 
     /** This method is called from within the constructor to
@@ -73,6 +97,14 @@ public class MainFrame extends javax.swing.JFrame {
     private void initComponents() {
         java.awt.GridBagConstraints gridBagConstraints;
 
+        dialogSaveISBNs = new javax.swing.JDialog();
+        jPanel4 = new javax.swing.JPanel();
+        jLabel3 = new javax.swing.JLabel();
+        tfTxtFilePath = new javax.swing.JTextField();
+        bnISBNFileLocation = new javax.swing.JButton();
+        jPanel5 = new javax.swing.JPanel();
+        bnISBNSaveOk = new javax.swing.JButton();
+        bnCancel = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
         tfExcelSheet = new javax.swing.JTextField();
@@ -85,6 +117,45 @@ public class MainFrame extends javax.swing.JFrame {
         jButton2 = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         jButton3 = new javax.swing.JButton();
+
+        dialogSaveISBNs.setTitle("Save isbn data");
+        dialogSaveISBNs.getContentPane().setLayout(new javax.swing.BoxLayout(dialogSaveISBNs.getContentPane(), javax.swing.BoxLayout.Y_AXIS));
+
+        jPanel4.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+
+        jLabel3.setText("File name ");
+        jPanel4.add(jLabel3);
+
+        tfTxtFilePath.setColumns(10);
+        jPanel4.add(tfTxtFilePath);
+
+        bnISBNFileLocation.setText("...");
+        bnISBNFileLocation.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bnISBNFileLocationActionPerformed(evt);
+            }
+        });
+        jPanel4.add(bnISBNFileLocation);
+
+        dialogSaveISBNs.getContentPane().add(jPanel4);
+
+        bnISBNSaveOk.setText("Ok");
+        bnISBNSaveOk.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bnISBNSaveOkActionPerformed(evt);
+            }
+        });
+        jPanel5.add(bnISBNSaveOk);
+
+        bnCancel.setText("Cancel");
+        bnCancel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bnCancelActionPerformed(evt);
+            }
+        });
+        jPanel5.add(bnCancel);
+
+        dialogSaveISBNs.getContentPane().add(jPanel5);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(new javax.swing.BoxLayout(getContentPane(), javax.swing.BoxLayout.Y_AXIS));
@@ -378,7 +449,8 @@ public class MainFrame extends javax.swing.JFrame {
             e.printStackTrace();
         }
         indexDatabase();
-
+        insertAccessionNumbers();
+        indexDatabase();
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
@@ -424,7 +496,148 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
         // TODO add your handling code here:
+        dialogSaveISBNs.setVisible(true);
     }//GEN-LAST:event_jButton5ActionPerformed
+
+    private void bnISBNFileLocationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bnISBNFileLocationActionPerformed
+        // TODO add your handling code here:
+        File createFile = null;
+        JFileChooser chooser = new JFileChooser(new File(System.getProperty("user.home")));
+        chooser.setFileFilter(new FileFilter() {
+
+//            @Override
+            public String getDescription() {
+                return ".txt";
+            }
+
+//            @Override
+            public boolean accept(File file) {
+                //throw new UnsupportedOperationException("Not supported yet.");
+                boolean status = false;
+                try {
+                    String fileName = file.getName().toLowerCase();
+                    status = fileName.endsWith(".txt");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                return status;
+
+            }
+        });
+        int i = chooser.showSaveDialog(this);
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        if (i == JFileChooser.APPROVE_OPTION) {
+
+            String file = chooser.getSelectedFile().toString();
+            StringTokenizer str = new StringTokenizer(file, ".");
+            if (str.countTokens() <= 2) {
+
+                if (str.countTokens() == 1) {
+                    createFile = new File(chooser.getSelectedFile().toString() + ".txt");
+                    if (createFile.exists()) {
+                        int cnt = JOptionPane.showConfirmDialog(this, "This file already exists ! Are you sure \n you want to over write it.", "check", JOptionPane.OK_CANCEL_OPTION);
+                        if (cnt == 0) {
+                            tfTxtFilePath.setText(createFile.toString());
+//                            System.out.println("override");
+                        } else {
+                            createFile = null;
+                            tfTxtFilePath.setText("");
+                        }
+                    } else {
+                        tfTxtFilePath.setText(createFile.toString());
+                    }
+                } else {
+                    str.nextToken();
+                    String s1 = str.nextToken(".");
+                    if (s1.equalsIgnoreCase("txt")) {
+                        createFile = new File(chooser.getSelectedFile().toString());
+                        if (createFile.exists()) {
+                            int cnt = JOptionPane.showConfirmDialog(this, "This file already exists ! Are you sure \n you want to over write it.", "check", JOptionPane.OK_CANCEL_OPTION);
+                            if (cnt == 0) {
+                                tfTxtFilePath.setText(createFile.toString());
+//                                System.out.println("override");
+                            } else {
+                                createFile = null;
+                                tfTxtFilePath.setText("");
+                            }
+                        } else {
+                            tfTxtFilePath.setText(createFile.toString());
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(this, "The given file is not in .txt format \n Please create .txt extension.", "check", JOptionPane.CANCEL_OPTION);
+                    }
+                }
+
+            } else {
+                JOptionPane.showMessageDialog(this, "The given file name is not correct \n Please create a new file.", "check", JOptionPane.YES_OPTION);
+            }
+        } else {
+            tfTxtFilePath.setText("");
+        }
+        try {
+            if (createFile != null) {
+                OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(tfTxtFilePath.getText()));
+                osw.flush();
+                osw.close();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }//GEN-LAST:event_bnISBNFileLocationActionPerformed
+
+    private void bnISBNSaveOkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bnISBNSaveOkActionPerformed
+        // TODO add your handling code here:
+        org.apache.poi.ss.usermodel.Workbook wb = null;
+        if (tfExcelSheet.getText().toLowerCase().endsWith(".xls")) {
+            try {
+                wb = new HSSFWorkbook(new FileInputStream(tfExcelSheet.getText()));
+            } catch (Exception ex) {
+            }
+        } else if (tfExcelSheet.getText().toLowerCase().endsWith("xlsx")) {
+            try {
+                wb = new XSSFWorkbook(new FileInputStream(new File(tfExcelSheet.getText())));
+            } catch (Exception e) {
+            }
+        }
+        if (wb != null) {
+            PrintWriter pw = null;
+            try {
+                pw = new PrintWriter(new File(tfTxtFilePath.getText()));
+                Sheet sheet = wb.getSheetAt(0);
+                int isbnIndex = 0;
+                for (Row row : sheet) {
+                    String isbn = "";
+                    for (Cell cell : row) {
+                        cell.setCellType(1);
+                        if (cell.getStringCellValue() != null && cell.getStringCellValue().equals("ISBN")) {
+                            isbnIndex = cell.getColumnIndex();
+                        }
+                        if (cell.getColumnIndex() == isbnIndex) {
+                            if (cell.getCellType() == cell.CELL_TYPE_NUMERIC) {
+                                isbn = String.valueOf((int) cell.getNumericCellValue());
+                            } else {
+                                isbn = cell.toString();
+                            }
+                        }
+                    }
+                    String filteredIsbn = getFilteredISBN(isbn);
+                    pw.write(filteredIsbn);
+                    pw.println();
+                }
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(MainFrame.class.getName()).log(Level.SEVERE, null, ex);
+            } finally {
+                pw.close();
+            }
+        }
+        this.dialogSaveISBNs.dispose();
+    }//GEN-LAST:event_bnISBNSaveOkActionPerformed
+
+    private void bnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bnCancelActionPerformed
+        // TODO add your handling code here:
+        this.dialogSaveISBNs.dispose();
+    }//GEN-LAST:event_bnCancelActionPerformed
     public void indexDatabase() {
         try {
             NewBibliographicSolrIndexCreator.getInstance().deleteData();
@@ -442,31 +655,171 @@ public class MainFrame extends javax.swing.JFrame {
     }
 
     public void insertAccessionNumbers() {
-        org.apache.poi.ss.usermodel.Workbook wb = null;
-        if (tfExcelSheet.getText().toLowerCase().endsWith("xls")) {
-            try {
-                wb = new HSSFWorkbook(new FileInputStream(tfExcelSheet.getText()));
-            } catch (Exception ex) {
-            }
-        } else if (tfExcelSheet.getText().toLowerCase().endsWith("xlsx")) {
-            try {
-                wb = new XSSFWorkbook(new FileInputStream(new File(tfExcelSheet.getText())));
-            } catch (Exception e) {
-            }
-        }
-        if(wb!=null){
-            Sheet sheet = wb.getSheetAt(0);
-            for (Row row : sheet) {
-                for (Cell cell : row) {
-                    // Do something here
-                    switch (cell.getCellType()) {
-                        
-                    }
-                    System.out.print("+++");
+        try {
+            org.apache.poi.ss.usermodel.Workbook wb = null;
+            Class.forName("org.postgresql.Driver");
+            Connection con = DriverManager.getConnection("jdbc:postgresql://192.168.1.5:5432/IITH", "newgenlib", "newgenlib");
+            if (tfExcelSheet.getText().toLowerCase().endsWith(".xls")) {
+                try {
+                    wb = new HSSFWorkbook(new FileInputStream(tfExcelSheet.getText()));
+                } catch (Exception ex) {
                 }
-                System.out.println("");
-                System.out.println("-----------------------------------------------New Row----------------------------------");
+            } else if (tfExcelSheet.getText().toLowerCase().endsWith("xlsx")) {
+                try {
+                    wb = new XSSFWorkbook(new FileInputStream(new File(tfExcelSheet.getText())));
+                } catch (Exception e) {
+                }
             }
+            if (wb != null) {
+                Sheet sheet = wb.getSheetAt(0);
+                int accessionNoIndex = 0;
+                int bookNoIndex = 0;
+                int classificationNoIndex = 0;
+                int isbnIndex = 0;
+                int shelvingLocationIndex = 0;
+                for (Row row : sheet) {
+                    for (Cell cell : row) {
+                        cell.setCellType(1);
+                        if (cell.getStringCellValue() != null && cell.getStringCellValue().equals("AccessionNumber")) {
+                            accessionNoIndex = cell.getColumnIndex();
+                        } else if (cell.getStringCellValue() != null && cell.getStringCellValue().equals("BookNumber")) {
+                            bookNoIndex = cell.getColumnIndex();
+                        } else if (cell.getStringCellValue() != null && cell.getStringCellValue().equals("ClassificationNumber")) {
+                            classificationNoIndex = cell.getColumnIndex();
+                        } else if (cell.getStringCellValue() != null && cell.getStringCellValue().equals("ISBN")) {
+                            isbnIndex = cell.getColumnIndex();
+                        } else if (cell.getStringCellValue() != null && cell.getStringCellValue().equals("ShelvingLocation")) {
+                            shelvingLocationIndex = cell.getColumnIndex();
+                        }
+                    }
+                }
+                for (Row row : sheet) {
+                    String accessionNo = "";
+                    String bookNo = "";
+                    String classificationNo = "";
+                    String isbn = "";
+                    String shelvingLocation = "";
+                    for (Cell cell : row) {
+                        // Do something here
+                        if (cell.getColumnIndex() == accessionNoIndex) {
+                            if (cell.getCellType() == cell.CELL_TYPE_NUMERIC) {
+                                accessionNo = String.valueOf((int) cell.getNumericCellValue());
+                            } else {
+                                accessionNo = cell.toString();
+                            }
+                        } else if (cell.getColumnIndex() == bookNoIndex) {
+                            bookNo = cell.toString();
+                            bookNo = bookNo.replaceAll("'", "''");
+                        } else if (cell.getColumnIndex() == classificationNoIndex) {
+                            classificationNo = cell.toString();
+                            classificationNo = classificationNo.replaceAll("'", "''");
+                        } else if (cell.getColumnIndex() == isbnIndex) {
+                            if (cell.getCellType() == cell.CELL_TYPE_NUMERIC) {
+                                isbn = String.valueOf((int) cell.getNumericCellValue());
+                            } else {
+                                isbn = cell.toString();
+                            }
+                        } else if (cell.getColumnIndex() == shelvingLocationIndex) {
+                            shelvingLocation = cell.toString();
+                            shelvingLocation = shelvingLocation.replaceAll("'", "''");
+
+                        }
+                        switch (cell.getCellType()) {
+                        }
+                    }
+                    try {
+                        SolrServer server = new CommonsHttpSolrServer("http://192.168.1.5:8080/apache-solr-bib");
+                        SolrQuery query = new SolrQuery();
+                        String filteredISBN = getFilteredISBN(isbn);
+                        if (filteredISBN != null && !filteredISBN.equals("")) {
+                            query.setQuery("020_Text:" + filteredISBN);
+                        }
+//                        System.out.println("Query ### " + query.toString());
+                        query.setStart(0);
+                        QueryResponse qresp = server.query(query);
+                        SolrDocumentList docs = qresp.getResults();
+                        if (docs.size() > 0) {
+                            String id = docs.get(0).getFieldValue("ID").toString();
+                            StringTokenizer st = new StringTokenizer(id, "_");
+                            Vector ids = new Vector();
+                            while (st.hasMoreTokens()) {
+                                ids.addElement(st.nextToken());
+                            }
+                            String catRecId = ids.get(0).toString();
+                            String ownerLibId = ids.get(1).toString();
+                            System.out.println("CatRecId # " + catRecId + " ********* OwnerLibId # " + ownerLibId);
+                            String volumeId = "";
+                            Statement stmt = con.createStatement();
+                            ResultSet rs = stmt.executeQuery("select volume_id from cat_volume where cataloguerecordid = '" + catRecId + "' and owner_library_id = '" + ownerLibId + "'");
+                            while (rs.next()) {
+                                volumeId = rs.getString(1);
+                            }
+                            rs.close();
+                            stmt.close();
+                            int locationId = 0;
+                            stmt = con.createStatement();
+                            rs = stmt.executeQuery("select location_id from location where location = '" + shelvingLocation + "'");
+                            if (rs.next()) {
+                                locationId = rs.getInt(1);
+                            } else {
+                                locationId = 1;
+                            }
+                            rs.close();
+                            stmt.close();
+                            String accNo = "";
+                            String volId = "";
+                            int locId = 0;
+                            String bkNo = "";
+                            String clssfctnNo = "";
+                            StringTokenizer accTokens = new StringTokenizer(accessionNo, ",");
+                            while (accTokens.hasMoreTokens()) {
+                                String values = "";
+                                if (accessionNo != null && !accessionNo.equals("")) {
+                                    accNo = accTokens.nextToken().trim();
+                                }
+                                if (volumeId != null && !volumeId.equals("")) {
+                                    volId = volumeId;
+                                }
+                                if (locationId != 0) {
+                                    locId = locationId;
+                                }
+                                if (bookNo != null && !bookNo.equals("")) {
+                                    bkNo = bookNo;
+                                }
+                                if (classificationNo != null && !classificationNo.equals("")) {
+                                    clssfctnNo = classificationNo;
+                                }
+                                values = "'" + accNo + "', 1, '" + volId + "', '8', '" + locId + "', '" + accNo + "', '" + bkNo + "', '" + clssfctnNo + "', ";
+                                if (!bkNo.equals("")) {
+                                    values += "'" + clssfctnNo + "-" + bookNo + "', 'A', '1', current_date, '', '1', '<Root/>', '', '', '', '', '', ''";
+                                } else {
+                                    values += "'" + clssfctnNo + "', 'A', '1', current_date, '', '1', '<Root/>'";
+                                }
+                                String columns = "accession_number, library_id, volume_id, material_type_id, location_id, barcode, book_number, classification_number, call_number, status, entry_id, entry_date, issue_details, entry_library_id, custom";
+                                try {
+                                    Statement insertStmt = con.createStatement();
+                                    System.out.println("INSERT INTO document(" + columns + ") VALUES (" + values + ")");
+                                    insertStmt.executeUpdate("INSERT INTO document(" + columns + ") VALUES (" + values + ")");
+                                    insertStmt.close();
+                                } catch (Exception ex) {
+                                    System.out.println(accNo + "---" + ex.getMessage());
+                                }
+                            }
+                        }
+                        System.out.println("-----------------------------------------------New Row----------------------------------");
+                    } catch (SolrServerException ex) {
+                        ex.printStackTrace();
+                    } catch (MalformedURLException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+            System.out.println("Successfully inserted");
+            con.close();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
         }
     }
 
@@ -485,6 +838,17 @@ public class MainFrame extends javax.swing.JFrame {
         return count;
     }
 
+    private String getFilteredISBN(String isbn) {
+        String curedISBN = "";
+        char[] chISBN = isbn.toCharArray();
+        for (int i = 0; i < chISBN.length; i++) {
+            if (Character.isDigit(chISBN[i])) {
+                curedISBN += chISBN[i];
+            }
+        }
+        return curedISBN;
+    }
+
     /**
      * @param args the command line arguments
      */
@@ -497,6 +861,10 @@ public class MainFrame extends javax.swing.JFrame {
         });
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton bnCancel;
+    private javax.swing.JButton bnISBNFileLocation;
+    private javax.swing.JButton bnISBNSaveOk;
+    private javax.swing.JDialog dialogSaveISBNs;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
@@ -504,10 +872,14 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JButton jButton5;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel5;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField tfExcelSheet;
+    private javax.swing.JTextField tfTxtFilePath;
     // End of variables declaration//GEN-END:variables
 }
