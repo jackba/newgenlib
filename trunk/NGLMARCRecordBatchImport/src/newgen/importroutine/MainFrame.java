@@ -84,6 +84,11 @@ public class MainFrame extends javax.swing.JFrame {
     /** Creates new form MainFrame */
     public MainFrame() {
         initComponents();
+        tfDBIPAddress.setText("localhost");
+        tfDBName.setText("IITH");
+        tfDBPort.setText("5432");
+        tfDBUsername.setText("postgres");
+        tfDBPassword.setText("newgenlib");
         dialogSaveISBNs.setSize(250, 100);
     }
 
@@ -115,6 +120,20 @@ public class MainFrame extends javax.swing.JFrame {
         jTextField1 = new javax.swing.JTextField();
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
+        jPanel6 = new javax.swing.JPanel();
+        jLabel4 = new javax.swing.JLabel();
+        tfDBIPAddress = new javax.swing.JTextField();
+        jLabel5 = new javax.swing.JLabel();
+        tfDBPort = new javax.swing.JTextField();
+        jLabel6 = new javax.swing.JLabel();
+        tfDBUsername = new javax.swing.JTextField();
+        jLabel7 = new javax.swing.JLabel();
+        tfDBPassword = new javax.swing.JTextField();
+        jLabel8 = new javax.swing.JLabel();
+        jLabel9 = new javax.swing.JLabel();
+        tfDBName = new javax.swing.JTextField();
+        jPanel7 = new javax.swing.JPanel();
+        pbImportFile = new javax.swing.JProgressBar();
         jPanel2 = new javax.swing.JPanel();
         jButton3 = new javax.swing.JButton();
 
@@ -221,6 +240,81 @@ public class MainFrame extends javax.swing.JFrame {
 
         getContentPane().add(jPanel1);
 
+        jPanel6.setLayout(new java.awt.GridBagLayout());
+
+        jLabel4.setText("IP address of DB ");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+        jPanel6.add(jLabel4, gridBagConstraints);
+
+        tfDBIPAddress.setColumns(10);
+        jPanel6.add(tfDBIPAddress, new java.awt.GridBagConstraints());
+
+        jLabel5.setText("DB port ");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+        jPanel6.add(jLabel5, gridBagConstraints);
+
+        tfDBPort.setColumns(10);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 2;
+        jPanel6.add(tfDBPort, gridBagConstraints);
+
+        jLabel6.setText("DB username ");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 3;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+        jPanel6.add(jLabel6, gridBagConstraints);
+
+        tfDBUsername.setColumns(10);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 3;
+        jPanel6.add(tfDBUsername, gridBagConstraints);
+
+        jLabel7.setText("DB password ");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 4;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+        jPanel6.add(jLabel7, gridBagConstraints);
+
+        tfDBPassword.setColumns(10);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 4;
+        jPanel6.add(tfDBPassword, gridBagConstraints);
+
+        jLabel8.setText(" defaulft (newgenlib)");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 2;
+        gridBagConstraints.gridy = 4;
+        jPanel6.add(jLabel8, gridBagConstraints);
+
+        jLabel9.setText("DB Name ");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 1;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+        jPanel6.add(jLabel9, gridBagConstraints);
+
+        tfDBName.setColumns(10);
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 1;
+        jPanel6.add(tfDBName, gridBagConstraints);
+
+        getContentPane().add(jPanel6);
+
+        jPanel7.setLayout(new java.awt.BorderLayout());
+        jPanel7.add(pbImportFile, java.awt.BorderLayout.CENTER);
+
+        getContentPane().add(jPanel7);
+
         jPanel2.setLayout(new java.awt.GridBagLayout());
 
         jButton3.setText("Import the above file");
@@ -264,51 +358,56 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         // TODO add your handling code here:
-        SwingWorker sw = new SwingWorker() {
-
-            int recordCount = 0;
-
-            @Override
-            protected Object doInBackground() throws Exception {
-                try {
-                    System.out.println("jTextField1.getText() " + jTextField1.getText());
-                    FileInputStream fis = new FileInputStream(jTextField1.getText());
-                    XMLInputFactory factory = XMLInputFactory.newInstance();
-                    XMLStreamReader parser = factory.createXMLStreamReader(fis);
-                    int recordCountM = 0;
-                    while (parser.hasNext()) {
-                        String nameele = "";
-                        try {
-                            nameele = parser.getLocalName();
-                        } catch (Exception ex) {
-                        }
-                        if (parser.getEventType() == XMLStreamConstants.START_ELEMENT && nameele != null && nameele.equals("record")) {
-                            recordCountM++;
-                        }
-                        parser.next();
-                    }
-                    parser.close();
-                    recordCount = recordCountM;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                JOptionPane.showMessageDialog(null, "Found " + recordCount + " records", "Records count", JOptionPane.INFORMATION_MESSAGE);
-                return "";
-            }
-        };
-        sw.execute();
+        refresh();
+//        SwingWorker sw = new SwingWorker() {
+//
+//            int recordCount = 0;
+//
+//            @Override
+//            protected Object doInBackground() throws Exception {
+//                try {
+//                    System.out.println("jTextField1.getText() " + jTextField1.getText());
+//                    FileInputStream fis = new FileInputStream(jTextField1.getText());
+//                    XMLInputFactory factory = XMLInputFactory.newInstance();
+//                    XMLStreamReader parser = factory.createXMLStreamReader(fis);
+//                    int recordCountM = 0;
+//                    while (parser.hasNext()) {
+//                        String nameele = "";
+//                        try {
+//                            nameele = parser.getLocalName();
+//                        } catch (Exception ex) {
+//                        }
+//                        if (parser.getEventType() == XMLStreamConstants.START_ELEMENT && nameele != null && nameele.equals("record")) {
+//                            recordCountM++;
+//                        }
+//                        parser.next();
+//                    }
+//                    parser.close();
+//                    recordCount = recordCountM;
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//                JOptionPane.showMessageDialog(null, "Found " + recordCount + " records", "Records count", JOptionPane.INFORMATION_MESSAGE);
+//                return "";
+//            }
+//        };
+//        sw.execute();
+        int total = this.getTotalRecords();
+        JOptionPane.showMessageDialog(null, "Found " + total + " records", "Records count", JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
         // TODO add your handling code here:
+        refresh();
         try {
             Class.forName("org.postgresql.Driver");
-            Connection con = DriverManager.getConnection("jdbc:postgresql://localhost:5432/IITH", "newgenlib", "newgenlib");
+            Connection con = DriverManager.getConnection("jdbc:postgresql://" + tfDBIPAddress.getText() + ":" + tfDBPort.getText() + "/" + tfDBName.getText(), tfDBUsername.getText(), tfDBPassword.getText());
             PersistMARCRecord psm = new PersistMARCRecord("1", "1", "1", "1", "1", con, false);
-            FileInputStream fis = new FileInputStream("/home/siddartha/Share/abc.xml");
+            FileInputStream fis = new FileInputStream(jTextField1.getText());
             XMLInputFactory factory = XMLInputFactory.newInstance();
             XMLStreamReader parser = factory.createXMLStreamReader(fis);
             int recordCount = 0;
+            int total = this.getTotalRecords();
             CatalogMaterialDescription cmd = null;
             ArrayList alfields = null;
             ArrayList alControlFields = null;
@@ -322,6 +421,7 @@ public class MainFrame extends javax.swing.JFrame {
             String currentLeader = "";
             String currently = "";
             String currentTag = "";
+            pbImportFile.setMaximum(total);
             while (parser.hasNext()) {
                 int event = parser.getEventType();
 //                System.out.println(parser.getEventType());
@@ -417,7 +517,7 @@ public class MainFrame extends javax.swing.JFrame {
                                 cmd.addControlField(alControlFields);
                                 cmd.addField(alfields);
                                 cmd.setFixedField(ffp.fxld);
-                                System.out.println(cmd);
+//                                System.out.println(cmd);
                                 saveRecord(cmd, psm);
                             } else if (nameele.equals("leader")) {
                                 ffp.startLeader(new Leader(currentLeader));
@@ -442,6 +542,8 @@ public class MainFrame extends javax.swing.JFrame {
                 } // end switch
 
                 parser.next();
+                pbImportFile.setValue(recordCount);
+                pbImportFile.setString(recordCount + "/" + total);
             } // end while
             parser.close();
             System.out.println("Total number of records: " + recordCount);
@@ -824,7 +926,7 @@ public class MainFrame extends javax.swing.JFrame {
     }
 
     public void saveRecord(CatalogMaterialDescription cmd, PersistMARCRecord psm) {
-        System.out.println(cmd);
+//        System.out.println(cmd);
         psm.persist3_0(cmd, "1", "3", "");
     }
 
@@ -847,6 +949,56 @@ public class MainFrame extends javax.swing.JFrame {
             }
         }
         return curedISBN;
+    }
+
+    public int getTotalRecords() {
+
+        int total = 0;
+        SwingWorker sw = new SwingWorker() {
+
+            int recordCount = 0;
+
+            @Override
+            protected Object doInBackground() throws Exception {
+                try {
+                    System.out.println("jTextField1.getText() " + jTextField1.getText());
+                    FileInputStream fis = new FileInputStream(jTextField1.getText());
+                    XMLInputFactory factory = XMLInputFactory.newInstance();
+                    XMLStreamReader parser = factory.createXMLStreamReader(fis);
+                    int recordCountM = 0;
+                    while (parser.hasNext()) {
+                        String nameele = "";
+                        try {
+                            nameele = parser.getLocalName();
+                        } catch (Exception ex) {
+                        }
+                        if (parser.getEventType() == XMLStreamConstants.START_ELEMENT && nameele != null && nameele.equals("record")) {
+                            recordCountM++;
+                        }
+                        parser.next();
+                    }
+                    parser.close();
+                    recordCount = recordCountM;
+                    totalRecords = recordCount;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return "";
+            }
+        };
+        sw.run();
+        if (sw.isDone()) {
+            total = totalRecords;
+            System.out.println("Total records ### " + total);
+        }
+        return total;
+    }
+
+    private void refresh() {
+        pbImportFile.setString("");
+        pbImportFile.setValue(0);
+        pbImportFile.setMaximum(0);
+        pbImportFile.setStringPainted(true);
     }
 
     /**
@@ -873,13 +1025,28 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
+    private javax.swing.JPanel jPanel6;
+    private javax.swing.JPanel jPanel7;
     private javax.swing.JTextField jTextField1;
+    private javax.swing.JProgressBar pbImportFile;
+    private javax.swing.JTextField tfDBIPAddress;
+    private javax.swing.JTextField tfDBName;
+    private javax.swing.JTextField tfDBPassword;
+    private javax.swing.JTextField tfDBPort;
+    private javax.swing.JTextField tfDBUsername;
     private javax.swing.JTextField tfExcelSheet;
     private javax.swing.JTextField tfTxtFilePath;
     // End of variables declaration//GEN-END:variables
+    public int totalRecords;
 }
