@@ -653,11 +653,8 @@ public class MainFrame extends javax.swing.JFrame {
                     for (Cell cell : row) {
                         // Do something here
                         if (cell.getColumnIndex() == accessionNoIndex) {
-                            if (cell.getCellType() == cell.CELL_TYPE_NUMERIC) {
-                                accessionNo = String.valueOf((int) cell.getNumericCellValue());
-                            } else {
-                                accessionNo = cell.toString();
-                            }
+                            accessionNo = cell.toString();
+                            accessionNo = accessionNo.replaceAll("'", "''");
                         } else if (cell.getColumnIndex() == bookNoIndex) {
                             bookNo = cell.toString();
                             bookNo = bookNo.replaceAll("'", "''");
