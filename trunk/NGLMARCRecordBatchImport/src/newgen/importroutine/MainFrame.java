@@ -85,7 +85,7 @@ public class MainFrame extends javax.swing.JFrame {
     public MainFrame() {
         initComponents();
         tfDBIPAddress.setText("localhost");
-        tfDBName.setText("IITH");
+        tfDBName.setText("newgenlib");
         tfDBPort.setText("5432");
         tfDBUsername.setText("postgres");
         tfDBPassword.setText("newgenlib");
@@ -242,7 +242,7 @@ public class MainFrame extends javax.swing.JFrame {
 
         jPanel6.setLayout(new java.awt.GridBagLayout());
 
-        jLabel4.setText("IP address of DB ");
+        jLabel4.setText("IP address of database ");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
         jPanel6.add(jLabel4, gridBagConstraints);
@@ -250,7 +250,7 @@ public class MainFrame extends javax.swing.JFrame {
         tfDBIPAddress.setColumns(10);
         jPanel6.add(tfDBIPAddress, new java.awt.GridBagConstraints());
 
-        jLabel5.setText("DB port ");
+        jLabel5.setText("Database port ");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 2;
@@ -263,7 +263,7 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.gridy = 2;
         jPanel6.add(tfDBPort, gridBagConstraints);
 
-        jLabel6.setText("DB username ");
+        jLabel6.setText("Database username ");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 3;
@@ -276,7 +276,7 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.gridy = 3;
         jPanel6.add(tfDBUsername, gridBagConstraints);
 
-        jLabel7.setText("DB password ");
+        jLabel7.setText("Database password ");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 4;
@@ -289,13 +289,13 @@ public class MainFrame extends javax.swing.JFrame {
         gridBagConstraints.gridy = 4;
         jPanel6.add(tfDBPassword, gridBagConstraints);
 
-        jLabel8.setText(" defaulft (newgenlib)");
+        jLabel8.setText(" default (newgenlib)");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 2;
         gridBagConstraints.gridy = 4;
         jPanel6.add(jLabel8, gridBagConstraints);
 
-        jLabel9.setText("DB Name ");
+        jLabel9.setText("Database name ");
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;
@@ -398,161 +398,9 @@ public class MainFrame extends javax.swing.JFrame {
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
         // TODO add your handling code here:
-        refresh();
-        try {
-            Class.forName("org.postgresql.Driver");
-            Connection con = DriverManager.getConnection("jdbc:postgresql://" + tfDBIPAddress.getText() + ":" + tfDBPort.getText() + "/" + tfDBName.getText(), tfDBUsername.getText(), tfDBPassword.getText());
-            PersistMARCRecord psm = new PersistMARCRecord("1", "1", "1", "1", "1", con, false);
-            FileInputStream fis = new FileInputStream(jTextField1.getText());
-            XMLInputFactory factory = XMLInputFactory.newInstance();
-            XMLStreamReader parser = factory.createXMLStreamReader(fis);
-            int recordCount = 0;
-            int total = this.getTotalRecords();
-            CatalogMaterialDescription cmd = null;
-            ArrayList alfields = null;
-            ArrayList alControlFields = null;
-            ArrayList alsubfields = null;
-            ControlField currentcf = null;
-            Field currentField = null;
-            SubField currentSF = null;
-            char currentSFIden = ' ';
-            String currentSFData = "";
-            FixedFieldProcessor ffp = null;
-            String currentLeader = "";
-            String currently = "";
-            String currentTag = "";
-            pbImportFile.setMaximum(total);
-            while (parser.hasNext()) {
-                int event = parser.getEventType();
-//                System.out.println(parser.getEventType());
-                String nameele = null;
-                try {
-                    nameele = parser.getLocalName();
-                } catch (Exception ex) {
-                }
-
-                //System.out.println("nameele: " + nameele);
-                switch (event) {
-                    case XMLStreamConstants.START_ELEMENT:
-                        if (nameele != null) {
-                            if (nameele.equals("record")) {
-                                ffp = new FixedFieldProcessor();
-                                cmd = new CatalogMaterialDescription();
-                                currentLeader = "";
-                                alfields = new ArrayList();
-                                alControlFields = new ArrayList();
-                                recordCount++;
-                            } else if (nameele.equals("controlfield")) {
-                                currently = "controlfield";
-//                                System.out.println("controlfield staretd");
-                                int count = parser.getAttributeCount();
-                                String tag = "";
-                                for (int i = 0; i < count; i++) {
-                                    tag = parser.getAttributeValue(i);
-//                                    System.out.println(parser.getAttributeName(i) + "=" + parser.getAttributeValue(i));
-                                }
-                                currentcf = new ControlField();
-                                currentcf.setTag(tag);
-                            } else if (nameele.equals("datafield")) {
-                                int count = parser.getAttributeCount();
-                                String tag = "";
-                                String i1 = "";
-                                String i2 = "";
-                                for (int i = 0; i < count; i++) {
-                                    String attrname = parser.getAttributeName(i).getLocalPart();
-                                    String aattrval = parser.getAttributeValue(i);
-                                    if (attrname.equals("tag")) {
-                                        tag = aattrval;
-                                    }
-                                    if (attrname.equals("ind1")) {
-                                        i1 = aattrval;
-                                    }
-                                    if (attrname.equals("ind2")) {
-                                        i2 = aattrval;
-                                    }
-
-                                }
-
-                                char i1c = ' ';
-                                char i2c = ' ';
-                                if (i1.length() > 0) {
-                                    i1c = i1.charAt(0);
-                                }
-                                if (i2.length() > 0) {
-                                    i2c = i2.charAt(0);
-                                }
-                                currentField = new Field(tag, i1c, i2c);
-                                alsubfields = new ArrayList();
-                                currentTag = tag;
-                            } else if (nameele.equals("subfield")) {
-                                currently = "subfield";
-                                int count = parser.getAttributeCount();
-                                String code = "";
-                                for (int i = 0; i < count; i++) {
-                                    code = parser.getAttributeValue(i);
-                                }
-                                currentSFIden = code.charAt(0);
-                            } else if (nameele.equals("leader")) {
-                                currently = "leader";
-
-                            }
-
-//                        System.out.println("Starting: "+parser.getLocalName());
-                        }
-                        break;
-                    case XMLStreamConstants.END_ELEMENT:
-                        if (nameele != null) {
-                            if (nameele.equals("controlfield")) {
-                                alControlFields.add(currentcf);
-                            } else if (nameele.equals("subfield")) {
-                                currentSF = new SubField(currentSFIden, currentSFData);
-                                alsubfields.add(currentSF);
-                            } else if (nameele.equals("datafield")) {
-                                currentField.addSubField(alsubfields);
-                                if (!currentTag.startsWith("9")) {
-                                    alfields.add(currentField);
-                                }
-                            } else if (nameele.equals("record")) {
-                                cmd.setLeader(currentLeader);
-                                cmd.addControlField(alControlFields);
-                                cmd.addField(alfields);
-                                cmd.setFixedField(ffp.fxld);
-//                                System.out.println(cmd);
-                                saveRecord(cmd, psm);
-                            } else if (nameele.equals("leader")) {
-                                ffp.startLeader(new Leader(currentLeader));
-                            }
-                        }
-                        break;
-                    case XMLStreamConstants.CHARACTERS:
-                        if (currently.equals("controlfield")) {
-                            currentcf.setData(parser.getText());
-                            ffp.startControlField(currentcf.getTag(), currentcf.getData());
-                        }
-                        if (currently.equals("subfield")) {
-                            currentSFData = parser.getText();
-                        }
-                        if (currently.equals("leader")) {
-                            currentLeader = parser.getText();
-                        }
-
-                        break;
-                    case XMLStreamConstants.CDATA:
-                        break;
-                } // end switch
-
-                parser.next();
-                pbImportFile.setValue(recordCount);
-                pbImportFile.setString(recordCount + "/" + total);
-            } // end while
-            parser.close();
-            System.out.println("Total number of records: " + recordCount);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        indexDatabase();
-        insertAccessionNumbers();
-        indexDatabase();
+        newThread nt = new newThread(this);
+        Thread th = new Thread(nt, "newThread");
+        th.start();
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
@@ -760,7 +608,7 @@ public class MainFrame extends javax.swing.JFrame {
         try {
             org.apache.poi.ss.usermodel.Workbook wb = null;
             Class.forName("org.postgresql.Driver");
-            Connection con = DriverManager.getConnection("jdbc:postgresql://192.168.1.5:5432/IITH", "newgenlib", "newgenlib");
+            Connection con = DriverManager.getConnection("jdbc:postgresql://" + tfDBIPAddress.getText() + ":" + tfDBPort.getText() + "/" + tfDBName.getText(), tfDBUsername.getText(), tfDBPassword.getText());
             if (tfExcelSheet.getText().toLowerCase().endsWith(".xls")) {
                 try {
                     wb = new HSSFWorkbook(new FileInputStream(tfExcelSheet.getText()));
@@ -794,6 +642,7 @@ public class MainFrame extends javax.swing.JFrame {
                             shelvingLocationIndex = cell.getColumnIndex();
                         }
                     }
+                    break;
                 }
                 for (Row row : sheet) {
                     String accessionNo = "";
@@ -830,16 +679,17 @@ public class MainFrame extends javax.swing.JFrame {
                         }
                     }
                     try {
-                        SolrServer server = new CommonsHttpSolrServer("http://192.168.1.5:8080/apache-solr-bib");
+                        SolrServer server = new CommonsHttpSolrServer("http://localhost:8080/apache-solr-bib");
                         SolrQuery query = new SolrQuery();
                         String filteredISBN = getFilteredISBN(isbn);
                         if (filteredISBN != null && !filteredISBN.equals("")) {
                             query.setQuery("020_Text:" + filteredISBN);
                         }
-//                        System.out.println("Query ### " + query.toString());
+                        System.out.println("Query ### " + query.toString());
                         query.setStart(0);
                         QueryResponse qresp = server.query(query);
                         SolrDocumentList docs = qresp.getResults();
+                        System.out.println("Total documents " + docs.size());
                         if (docs.size() > 0) {
                             String id = docs.get(0).getFieldValue("ID").toString();
                             StringTokenizer st = new StringTokenizer(id, "_");
@@ -956,8 +806,6 @@ public class MainFrame extends javax.swing.JFrame {
         int total = 0;
         SwingWorker sw = new SwingWorker() {
 
-            int recordCount = 0;
-
             @Override
             protected Object doInBackground() throws Exception {
                 try {
@@ -978,8 +826,7 @@ public class MainFrame extends javax.swing.JFrame {
                         parser.next();
                     }
                     parser.close();
-                    recordCount = recordCountM;
-                    totalRecords = recordCount;
+                    totalRecords = recordCountM;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -994,7 +841,7 @@ public class MainFrame extends javax.swing.JFrame {
         return total;
     }
 
-    private void refresh() {
+    public void refresh() {
         pbImportFile.setString("");
         pbImportFile.setValue(0);
         pbImportFile.setMaximum(0);
@@ -1019,7 +866,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JDialog dialogSaveISBNs;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
+    public javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton5;
     private javax.swing.JLabel jLabel1;
@@ -1038,15 +885,193 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel6;
     private javax.swing.JPanel jPanel7;
-    private javax.swing.JTextField jTextField1;
-    private javax.swing.JProgressBar pbImportFile;
-    private javax.swing.JTextField tfDBIPAddress;
-    private javax.swing.JTextField tfDBName;
-    private javax.swing.JTextField tfDBPassword;
-    private javax.swing.JTextField tfDBPort;
-    private javax.swing.JTextField tfDBUsername;
-    private javax.swing.JTextField tfExcelSheet;
+    public javax.swing.JTextField jTextField1;
+    public javax.swing.JProgressBar pbImportFile;
+    public javax.swing.JTextField tfDBIPAddress;
+    public javax.swing.JTextField tfDBName;
+    public javax.swing.JTextField tfDBPassword;
+    public javax.swing.JTextField tfDBPort;
+    public javax.swing.JTextField tfDBUsername;
+    public javax.swing.JTextField tfExcelSheet;
     private javax.swing.JTextField tfTxtFilePath;
     // End of variables declaration//GEN-END:variables
     public int totalRecords;
+}
+
+class newThread implements Runnable {
+
+    MainFrame mn;
+
+    public newThread(MainFrame mn) {
+        this.mn = mn;
+    }
+
+    @Override
+    public void run() {
+//        throw new UnsupportedOperationException("Not supported yet.");
+        mn.refresh();
+        mn.jButton3.setEnabled(false);
+        try {
+            Class.forName("org.postgresql.Driver");
+            Connection con = DriverManager.getConnection("jdbc:postgresql://" + mn.tfDBIPAddress.getText() + ":" + mn.tfDBPort.getText() + "/" + mn.tfDBName.getText(), mn.tfDBUsername.getText(), mn.tfDBPassword.getText());
+            PersistMARCRecord psm = new PersistMARCRecord("1", "1", "1", "1", "1", con, false);
+            FileInputStream fis = new FileInputStream(mn.jTextField1.getText());
+            XMLInputFactory factory = XMLInputFactory.newInstance();
+            XMLStreamReader parser = factory.createXMLStreamReader(fis);
+            int recordCount = 0;
+            int total = mn.getTotalRecords();
+            CatalogMaterialDescription cmd = null;
+            ArrayList alfields = null;
+            ArrayList alControlFields = null;
+            ArrayList alsubfields = null;
+            ControlField currentcf = null;
+            Field currentField = null;
+            SubField currentSF = null;
+            char currentSFIden = ' ';
+            String currentSFData = "";
+            FixedFieldProcessor ffp = null;
+            String currentLeader = "";
+            String currently = "";
+            String currentTag = "";
+            mn.pbImportFile.setMaximum(total - 1);
+            while (parser.hasNext()) {
+                int event = parser.getEventType();
+//                System.out.println(parser.getEventType());
+                String nameele = null;
+                try {
+                    nameele = parser.getLocalName();
+                } catch (Exception ex) {
+                }
+
+                //System.out.println("nameele: " + nameele);
+                switch (event) {
+                    case XMLStreamConstants.START_ELEMENT:
+                        if (nameele != null) {
+                            if (nameele.equals("record")) {
+                                ffp = new FixedFieldProcessor();
+                                cmd = new CatalogMaterialDescription();
+                                currentLeader = "";
+                                alfields = new ArrayList();
+                                alControlFields = new ArrayList();
+                                recordCount++;
+                            } else if (nameele.equals("controlfield")) {
+                                currently = "controlfield";
+//                                System.out.println("controlfield staretd");
+                                int count = parser.getAttributeCount();
+                                String tag = "";
+                                for (int i = 0; i < count; i++) {
+                                    tag = parser.getAttributeValue(i);
+//                                    System.out.println(parser.getAttributeName(i) + "=" + parser.getAttributeValue(i));
+                                }
+                                currentcf = new ControlField();
+                                currentcf.setTag(tag);
+                            } else if (nameele.equals("datafield")) {
+                                int count = parser.getAttributeCount();
+                                String tag = "";
+                                String i1 = "";
+                                String i2 = "";
+                                for (int i = 0; i < count; i++) {
+                                    String attrname = parser.getAttributeName(i).getLocalPart();
+                                    String aattrval = parser.getAttributeValue(i);
+                                    if (attrname.equals("tag")) {
+                                        tag = aattrval;
+                                    }
+                                    if (attrname.equals("ind1")) {
+                                        i1 = aattrval;
+                                    }
+                                    if (attrname.equals("ind2")) {
+                                        i2 = aattrval;
+                                    }
+
+                                }
+
+                                char i1c = ' ';
+                                char i2c = ' ';
+                                if (i1.length() > 0) {
+                                    i1c = i1.charAt(0);
+                                }
+                                if (i2.length() > 0) {
+                                    i2c = i2.charAt(0);
+                                }
+                                currentField = new Field(tag, i1c, i2c);
+                                alsubfields = new ArrayList();
+                                currentTag = tag;
+                            } else if (nameele.equals("subfield")) {
+                                currently = "subfield";
+                                int count = parser.getAttributeCount();
+                                String code = "";
+                                for (int i = 0; i < count; i++) {
+                                    code = parser.getAttributeValue(i);
+                                }
+                                currentSFIden = code.charAt(0);
+                            } else if (nameele.equals("leader")) {
+                                currently = "leader";
+
+                            }
+
+//                        System.out.println("Starting: "+parser.getLocalName());
+                        }
+                        break;
+                    case XMLStreamConstants.END_ELEMENT:
+                        if (nameele != null) {
+                            if (nameele.equals("controlfield")) {
+                                alControlFields.add(currentcf);
+                            } else if (nameele.equals("subfield")) {
+                                currentSF = new SubField(currentSFIden, currentSFData);
+                                alsubfields.add(currentSF);
+                            } else if (nameele.equals("datafield")) {
+                                currentField.addSubField(alsubfields);
+                                if (!currentTag.startsWith("9")) {
+                                    alfields.add(currentField);
+                                }
+                            } else if (nameele.equals("record")) {
+                                cmd.setLeader(currentLeader);
+                                cmd.addControlField(alControlFields);
+                                cmd.addField(alfields);
+                                cmd.setFixedField(ffp.fxld);
+//                                System.out.println(cmd);
+                                mn.saveRecord(cmd, psm);
+                            } else if (nameele.equals("leader")) {
+                                ffp.startLeader(new Leader(currentLeader));
+                            }
+                        }
+                        break;
+                    case XMLStreamConstants.CHARACTERS:
+                        if (currently.equals("controlfield")) {
+                            try {
+                                currentcf.setData(parser.getText());
+                                ffp.startControlField(currentcf.getTag(), currentcf.getData());
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                        }
+                        if (currently.equals("subfield")) {
+                            currentSFData = parser.getText();
+                        }
+                        if (currently.equals("leader")) {
+                            currentLeader = parser.getText();
+                        }
+
+                        break;
+                    case XMLStreamConstants.CDATA:
+                        break;
+                } // end switch
+
+                parser.next();
+                mn.pbImportFile.setValue(recordCount);
+                mn.pbImportFile.repaint();
+                mn.pbImportFile.setString(recordCount + "/" + total);
+            } // end while
+            parser.close();
+            System.out.println("Total number of records: " + recordCount);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        mn.indexDatabase();
+        mn.pbImportFile.setString("Inserting accession no's");
+        mn.insertAccessionNumbers();
+        mn.indexDatabase();
+        mn.pbImportFile.setString("Task successful");
+        mn.jButton3.setEnabled(true);
+    }
 }
