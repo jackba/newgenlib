@@ -642,7 +642,6 @@ public class MainFrame extends javax.swing.JFrame {
                             shelvingLocationIndex = cell.getColumnIndex();
                         }
                     }
-                    break;
                 }
                 for (Row row : sheet) {
                     String accessionNo = "";
@@ -670,7 +669,6 @@ public class MainFrame extends javax.swing.JFrame {
                         } else if (cell.getColumnIndex() == shelvingLocationIndex) {
                             shelvingLocation = cell.toString();
                             shelvingLocation = shelvingLocation.replaceAll("'", "''");
-
                         }
                         switch (cell.getCellType()) {
                         }
