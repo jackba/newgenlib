@@ -84,11 +84,11 @@ public class MainFrame extends javax.swing.JFrame {
     /** Creates new form MainFrame */
     public MainFrame() {
         initComponents();
-        jPanel8.setVisible(false);
+        //jPanel8.setVisible(false);
         tfDBIPAddress.setText("localhost");
-        tfDBName.setText("newgenlib");
+        tfDBName.setText("IITHF1");
         tfDBPort.setText("5432");
-        tfDBUsername.setText("postgres");
+        tfDBUsername.setText("newgenlib");
         tfDBPassword.setText("newgenlib");
         dialogSaveISBNs.setSize(250, 100);
     }
@@ -618,8 +618,7 @@ public class MainFrame extends javax.swing.JFrame {
                 int isbnIndex = 0;
                 int shelvingLocationIndex = 0;
                 for (Row row : sheet) {
-                    for (Cell cell : row) {
-                        cell.setCellType(1);
+                    for (Cell cell : row) {                        
                         if (cell.getStringCellValue() != null && cell.getStringCellValue().equals("AccessionNumber")) {
                             accessionNoIndex = cell.getColumnIndex();
                         } else if (cell.getStringCellValue() != null && cell.getStringCellValue().equals("BookNumber")) {
@@ -632,7 +631,9 @@ public class MainFrame extends javax.swing.JFrame {
                             shelvingLocationIndex = cell.getColumnIndex();
                         }
                     }
+                    break;
                 }
+                System.out.println(accessionNoIndex + "--" + bookNoIndex + "--" + classificationNoIndex + "--" + isbnIndex + "--" + shelvingLocationIndex);
                 for (Row row : sheet) {
                     String accessionNo = "";
                     String bookNo = "";
@@ -642,8 +643,16 @@ public class MainFrame extends javax.swing.JFrame {
                     for (Cell cell : row) {
                         // Do something here
                         if (cell.getColumnIndex() == accessionNoIndex) {
-                            accessionNo = cell.toString();
-                            accessionNo = accessionNo.replaceAll("'", "''");
+                            if (cell.getCellType() == cell.CELL_TYPE_NUMERIC) {
+                                
+                                int value = (int)cell.getNumericCellValue();
+                                accessionNo = String.valueOf(value);
+                                System.out.println(".........................in if"+accessionNo);
+                            } else {
+                                
+                                accessionNo = cell.toString();
+                                System.out.println(" in else................."+accessionNo);
+                            }
                         } else if (cell.getColumnIndex() == bookNoIndex) {
                             bookNo = cell.toString();
                             bookNo = bookNo.replaceAll("'", "''");
@@ -666,7 +675,9 @@ public class MainFrame extends javax.swing.JFrame {
                     try {
                         SolrServer server = new CommonsHttpSolrServer("http://localhost:8080/apache-solr-bib");
                         SolrQuery query = new SolrQuery();
+                        System.out.println("ISBN # " + isbn);
                         String filteredISBN = getFilteredISBN(isbn);
+                        System.out.println("Filtered ISBN # " + filteredISBN);
                         if (filteredISBN != null && !filteredISBN.equals("")) {
                             query.setQuery("020_Text:" + filteredISBN);
                         }
@@ -727,9 +738,9 @@ public class MainFrame extends javax.swing.JFrame {
                                 }
                                 values = "'" + accNo + "', 1, '" + volId + "', '8', '" + locId + "', '" + accNo + "', '" + bkNo + "', '" + clssfctnNo + "', ";
                                 if (!bkNo.equals("")) {
-                                    values += "'" + clssfctnNo + "-" + bookNo + "', 'A', '1', current_date, '', '1', '<Root/>', '', '', '', '', '', ''";
+                                    values += "'" + clssfctnNo + " " + bookNo + "', 'B', '1', current_date, '', '1', '<Root/>'";
                                 } else {
-                                    values += "'" + clssfctnNo + "', 'A', '1', current_date, '', '1', '<Root/>'";
+                                    values += "'" + clssfctnNo + "', 'B', '1', current_date, '', '1', '<Root/>'";
                                 }
                                 String columns = "accession_number, library_id, volume_id, material_type_id, location_id, barcode, book_number, classification_number, call_number, status, entry_id, entry_date, issue_details, entry_library_id, custom";
                                 try {
@@ -1055,6 +1066,6 @@ class newThread implements Runnable {
         mn.indexDatabase();
         mn.jButton3.setEnabled(true);
         mn.refresh();
-        mn.jPanel8.setVisible(true);
+        //mn.jPanel8.setVisible(true);
     }
 }
