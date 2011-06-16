@@ -84,6 +84,7 @@ public class MainFrame extends javax.swing.JFrame {
     /** Creates new form MainFrame */
     public MainFrame() {
         initComponents();
+        jPanel8.setVisible(false);
         tfDBIPAddress.setText("localhost");
         tfDBName.setText("newgenlib");
         tfDBPort.setText("5432");
@@ -132,6 +133,9 @@ public class MainFrame extends javax.swing.JFrame {
         jLabel8 = new javax.swing.JLabel();
         jLabel9 = new javax.swing.JLabel();
         tfDBName = new javax.swing.JTextField();
+        jPanel8 = new javax.swing.JPanel();
+        jLabel10 = new javax.swing.JLabel();
+        bnInsertAccessionnos = new javax.swing.JButton();
         jPanel7 = new javax.swing.JPanel();
         pbImportFile = new javax.swing.JProgressBar();
         jPanel2 = new javax.swing.JPanel();
@@ -310,6 +314,19 @@ public class MainFrame extends javax.swing.JFrame {
 
         getContentPane().add(jPanel6);
 
+        jLabel10.setText("Importing the xml file is completed, to insert accession numbers");
+        jPanel8.add(jLabel10);
+
+        bnInsertAccessionnos.setText("click here");
+        bnInsertAccessionnos.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bnInsertAccessionnosActionPerformed(evt);
+            }
+        });
+        jPanel8.add(bnInsertAccessionnos);
+
+        getContentPane().add(jPanel8);
+
         jPanel7.setLayout(new java.awt.BorderLayout());
         jPanel7.add(pbImportFile, java.awt.BorderLayout.CENTER);
 
@@ -359,39 +376,6 @@ public class MainFrame extends javax.swing.JFrame {
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         // TODO add your handling code here:
         refresh();
-//        SwingWorker sw = new SwingWorker() {
-//
-//            int recordCount = 0;
-//
-//            @Override
-//            protected Object doInBackground() throws Exception {
-//                try {
-//                    System.out.println("jTextField1.getText() " + jTextField1.getText());
-//                    FileInputStream fis = new FileInputStream(jTextField1.getText());
-//                    XMLInputFactory factory = XMLInputFactory.newInstance();
-//                    XMLStreamReader parser = factory.createXMLStreamReader(fis);
-//                    int recordCountM = 0;
-//                    while (parser.hasNext()) {
-//                        String nameele = "";
-//                        try {
-//                            nameele = parser.getLocalName();
-//                        } catch (Exception ex) {
-//                        }
-//                        if (parser.getEventType() == XMLStreamConstants.START_ELEMENT && nameele != null && nameele.equals("record")) {
-//                            recordCountM++;
-//                        }
-//                        parser.next();
-//                    }
-//                    parser.close();
-//                    recordCount = recordCountM;
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//                JOptionPane.showMessageDialog(null, "Found " + recordCount + " records", "Records count", JOptionPane.INFORMATION_MESSAGE);
-//                return "";
-//            }
-//        };
-//        sw.execute();
         int total = this.getTotalRecords();
         JOptionPane.showMessageDialog(null, "Found " + total + " records", "Records count", JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_jButton2ActionPerformed
@@ -588,6 +572,12 @@ public class MainFrame extends javax.swing.JFrame {
         // TODO add your handling code here:
         this.dialogSaveISBNs.dispose();
     }//GEN-LAST:event_bnCancelActionPerformed
+
+    private void bnInsertAccessionnosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bnInsertAccessionnosActionPerformed
+        // TODO add your handling code here:
+        insertAccessionNumbers();
+        indexDatabase();
+    }//GEN-LAST:event_bnInsertAccessionnosActionPerformed
     public void indexDatabase() {
         try {
             NewBibliographicSolrIndexCreator.getInstance().deleteData();
@@ -684,7 +674,6 @@ public class MainFrame extends javax.swing.JFrame {
                         query.setStart(0);
                         QueryResponse qresp = server.query(query);
                         SolrDocumentList docs = qresp.getResults();
-                        System.out.println("Total documents " + docs.size());
                         if (docs.size() > 0) {
                             String id = docs.get(0).getFieldValue("ID").toString();
                             StringTokenizer st = new StringTokenizer(id, "_");
@@ -694,7 +683,7 @@ public class MainFrame extends javax.swing.JFrame {
                             }
                             String catRecId = ids.get(0).toString();
                             String ownerLibId = ids.get(1).toString();
-                            System.out.println("CatRecId # " + catRecId + " ********* OwnerLibId # " + ownerLibId);
+//                            System.out.println("CatRecId # " + catRecId + " ********* OwnerLibId # " + ownerLibId);
                             String volumeId = "";
                             Statement stmt = con.createStatement();
                             ResultSet rs = stmt.executeQuery("select volume_id from cat_volume where cataloguerecordid = '" + catRecId + "' and owner_library_id = '" + ownerLibId + "'");
@@ -785,7 +774,7 @@ public class MainFrame extends javax.swing.JFrame {
         return count;
     }
 
-    private String getFilteredISBN(String isbn) {
+    public String getFilteredISBN(String isbn) {
         String curedISBN = "";
         char[] chISBN = isbn.toCharArray();
         for (int i = 0; i < chISBN.length; i++) {
@@ -804,7 +793,6 @@ public class MainFrame extends javax.swing.JFrame {
             @Override
             protected Object doInBackground() throws Exception {
                 try {
-                    System.out.println("jTextField1.getText() " + jTextField1.getText());
                     FileInputStream fis = new FileInputStream(jTextField1.getText());
                     XMLInputFactory factory = XMLInputFactory.newInstance();
                     XMLStreamReader parser = factory.createXMLStreamReader(fis);
@@ -831,7 +819,7 @@ public class MainFrame extends javax.swing.JFrame {
         sw.run();
         if (sw.isDone()) {
             total = totalRecords;
-            System.out.println("Total records ### " + total);
+//            System.out.println("Total records ### " + total);
         }
         return total;
     }
@@ -858,6 +846,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JButton bnCancel;
     private javax.swing.JButton bnISBNFileLocation;
     private javax.swing.JButton bnISBNSaveOk;
+    private javax.swing.JButton bnInsertAccessionnos;
     private javax.swing.JDialog dialogSaveISBNs;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
@@ -865,6 +854,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton5;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -880,6 +870,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel6;
     private javax.swing.JPanel jPanel7;
+    public javax.swing.JPanel jPanel8;
     public javax.swing.JTextField jTextField1;
     public javax.swing.JProgressBar pbImportFile;
     public javax.swing.JTextField tfDBIPAddress;
@@ -1054,19 +1045,16 @@ class newThread implements Runnable {
 
                 parser.next();
                 mn.pbImportFile.setValue(recordCount);
-                mn.pbImportFile.repaint();
                 mn.pbImportFile.setString(recordCount + "/" + total);
             } // end while
             parser.close();
-            System.out.println("Total number of records: " + recordCount);
+//            System.out.println("Total number of records: " + recordCount);
         } catch (Exception e) {
             e.printStackTrace();
         }
         mn.indexDatabase();
-        mn.pbImportFile.setString("Inserting accession no's");
-        mn.insertAccessionNumbers();
-        mn.indexDatabase();
-        mn.pbImportFile.setString("Task successful");
         mn.jButton3.setEnabled(true);
+        mn.refresh();
+        mn.jPanel8.setVisible(true);
     }
 }
