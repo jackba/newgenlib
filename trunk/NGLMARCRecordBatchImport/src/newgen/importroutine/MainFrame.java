@@ -32,6 +32,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -79,11 +80,14 @@ import org.verus.ngl.indexing.UniformTitleSolrIndexCreator;
  */
 public class MainFrame extends javax.swing.JFrame {
 
+    Connection con = null;
     char recorDelim = '';
+    NewBibliographicSolrIndexCreator nbw = new NewBibliographicSolrIndexCreator();
 
     /** Creates new form MainFrame */
     public MainFrame() {
         initComponents();
+        
         //jPanel8.setVisible(false);
         tfDBIPAddress.setText("localhost");
         tfDBName.setText("IITHF1");
@@ -91,6 +95,12 @@ public class MainFrame extends javax.swing.JFrame {
         tfDBUsername.setText("newgenlib");
         tfDBPassword.setText("newgenlib");
         dialogSaveISBNs.setSize(250, 100);
+        try {
+            Class.forName("org.postgresql.Driver");
+            this.con = DriverManager.getConnection("jdbc:postgresql://" + tfDBIPAddress.getText() + ":" + tfDBPort.getText() + "/" + tfDBName.getText(), tfDBUsername.getText(), tfDBPassword.getText());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     /** This method is called from within the constructor to
@@ -351,7 +361,7 @@ public class MainFrame extends javax.swing.JFrame {
         // TODO add your handling code here:
         JFileChooser jfc = new JFileChooser("/home/siddartha/Share");
         jfc.setFileFilter(new FileFilter() {
-
+            
             @Override
             public boolean accept(File f) {
                 if (f.getName().contains("xml") || f.isDirectory()) {
@@ -360,7 +370,7 @@ public class MainFrame extends javax.swing.JFrame {
                     return false;
                 }
             }
-
+            
             @Override
             public String getDescription() {
                 return "(.xml) MARCXML";
@@ -370,28 +380,28 @@ public class MainFrame extends javax.swing.JFrame {
         if (option == JFileChooser.APPROVE_OPTION) {
             jTextField1.setText(jfc.getSelectedFile().getAbsolutePath());
         }
-
+        
     }//GEN-LAST:event_jButton1ActionPerformed
-
+    
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         // TODO add your handling code here:
         refresh();
         int total = this.getTotalRecords();
         JOptionPane.showMessageDialog(null, "Found " + total + " records", "Records count", JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_jButton2ActionPerformed
-
+    
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
         // TODO add your handling code here:
         newThread nt = new newThread(this);
         Thread th = new Thread(nt, "newThread");
         th.start();
     }//GEN-LAST:event_jButton3ActionPerformed
-
+    
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
         // TODO add your handling code here:
         JFileChooser jfc = new JFileChooser();
         jfc.addChoosableFileFilter(new FileFilter() {
-
+            
             @Override
             public boolean accept(File f) {
                 if (f.getName().toLowerCase().contains("xls") || f.isDirectory()) {
@@ -400,14 +410,14 @@ public class MainFrame extends javax.swing.JFrame {
                     return false;
                 }
             }
-
+            
             @Override
             public String getDescription() {
                 return "xls";
             }
         });
         jfc.addChoosableFileFilter(new FileFilter() {
-
+            
             @Override
             public boolean accept(File f) {
                 if (f.getName().toLowerCase().contains("xlsx") || f.isDirectory()) {
@@ -416,7 +426,7 @@ public class MainFrame extends javax.swing.JFrame {
                     return false;
                 }
             }
-
+            
             @Override
             public String getDescription() {
                 return "xlsx";
@@ -427,12 +437,12 @@ public class MainFrame extends javax.swing.JFrame {
             tfExcelSheet.setText(jfc.getSelectedFile().getAbsolutePath());
         }
     }//GEN-LAST:event_jButton4ActionPerformed
-
+    
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
         // TODO add your handling code here:
         dialogSaveISBNs.setVisible(true);
     }//GEN-LAST:event_jButton5ActionPerformed
-
+    
     private void bnISBNFileLocationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bnISBNFileLocationActionPerformed
         // TODO add your handling code here:
         File createFile = null;
@@ -454,19 +464,19 @@ public class MainFrame extends javax.swing.JFrame {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
+                
                 return status;
-
+                
             }
         });
         int i = chooser.showSaveDialog(this);
         chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         if (i == JFileChooser.APPROVE_OPTION) {
-
+            
             String file = chooser.getSelectedFile().toString();
             StringTokenizer str = new StringTokenizer(file, ".");
             if (str.countTokens() <= 2) {
-
+                
                 if (str.countTokens() == 1) {
                     createFile = new File(chooser.getSelectedFile().toString() + ".txt");
                     if (createFile.exists()) {
@@ -502,7 +512,7 @@ public class MainFrame extends javax.swing.JFrame {
                         JOptionPane.showMessageDialog(this, "The given file is not in .txt format \n Please create .txt extension.", "check", JOptionPane.CANCEL_OPTION);
                     }
                 }
-
+                
             } else {
                 JOptionPane.showMessageDialog(this, "The given file name is not correct \n Please create a new file.", "check", JOptionPane.YES_OPTION);
             }
@@ -519,7 +529,7 @@ public class MainFrame extends javax.swing.JFrame {
             ex.printStackTrace();
         }
     }//GEN-LAST:event_bnISBNFileLocationActionPerformed
-
+    
     private void bnISBNSaveOkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bnISBNSaveOkActionPerformed
         // TODO add your handling code here:
         org.apache.poi.ss.usermodel.Workbook wb = null;
@@ -567,12 +577,12 @@ public class MainFrame extends javax.swing.JFrame {
         }
         this.dialogSaveISBNs.dispose();
     }//GEN-LAST:event_bnISBNSaveOkActionPerformed
-
+    
     private void bnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bnCancelActionPerformed
         // TODO add your handling code here:
         this.dialogSaveISBNs.dispose();
     }//GEN-LAST:event_bnCancelActionPerformed
-
+    
     private void bnInsertAccessionnosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bnInsertAccessionnosActionPerformed
         // TODO add your handling code here:
         insertAccessionNumbers();
@@ -593,12 +603,15 @@ public class MainFrame extends javax.swing.JFrame {
             System.out.println("Error in indexing !!!!!!!!!!!");
         }
     }
-
+    
     public void insertAccessionNumbers() {
         try {
+            
+                Class.forName("org.postgresql.Driver");
+            this.con = DriverManager.getConnection("jdbc:postgresql://" + tfDBIPAddress.getText() + ":" + tfDBPort.getText() + "/" + tfDBName.getText(), tfDBUsername.getText(), tfDBPassword.getText());
+            
             org.apache.poi.ss.usermodel.Workbook wb = null;
-            Class.forName("org.postgresql.Driver");
-            Connection con = DriverManager.getConnection("jdbc:postgresql://" + tfDBIPAddress.getText() + ":" + tfDBPort.getText() + "/" + tfDBName.getText(), tfDBUsername.getText(), tfDBPassword.getText());
+            
             if (tfExcelSheet.getText().toLowerCase().endsWith(".xls")) {
                 try {
                     wb = new HSSFWorkbook(new FileInputStream(tfExcelSheet.getText()));
@@ -618,7 +631,7 @@ public class MainFrame extends javax.swing.JFrame {
                 int isbnIndex = 0;
                 int shelvingLocationIndex = 0;
                 for (Row row : sheet) {
-                    for (Cell cell : row) {                        
+                    for (Cell cell : row) {
                         if (cell.getStringCellValue() != null && cell.getStringCellValue().equals("AccessionNumber")) {
                             accessionNoIndex = cell.getColumnIndex();
                         } else if (cell.getStringCellValue() != null && cell.getStringCellValue().equals("BookNumber")) {
@@ -645,13 +658,13 @@ public class MainFrame extends javax.swing.JFrame {
                         if (cell.getColumnIndex() == accessionNoIndex) {
                             if (cell.getCellType() == cell.CELL_TYPE_NUMERIC) {
                                 
-                                int value = (int)cell.getNumericCellValue();
+                                int value = (int) cell.getNumericCellValue();
                                 accessionNo = String.valueOf(value);
-                                System.out.println(".........................in if"+accessionNo);
+                                System.out.println(".........................in if" + accessionNo);
                             } else {
                                 
                                 accessionNo = cell.toString();
-                                System.out.println(" in else................."+accessionNo);
+                                System.out.println(" in else................." + accessionNo);
                             }
                         } else if (cell.getColumnIndex() == bookNoIndex) {
                             bookNo = cell.toString();
@@ -694,17 +707,18 @@ public class MainFrame extends javax.swing.JFrame {
                             }
                             String catRecId = ids.get(0).toString();
                             String ownerLibId = ids.get(1).toString();
-//                            System.out.println("CatRecId # " + catRecId + " ********* OwnerLibId # " + ownerLibId);
+                            System.out.println("CatRecId # " + catRecId + " ********* OwnerLibId # " + ownerLibId);
                             String volumeId = "";
-                            Statement stmt = con.createStatement();
+                            Statement stmt = this.con.createStatement();
                             ResultSet rs = stmt.executeQuery("select volume_id from cat_volume where cataloguerecordid = '" + catRecId + "' and owner_library_id = '" + ownerLibId + "'");
                             while (rs.next()) {
                                 volumeId = rs.getString(1);
+                                System.out.println("Volume id: "+volumeId);
                             }
                             rs.close();
                             stmt.close();
                             int locationId = 0;
-                            stmt = con.createStatement();
+                            stmt = this.con.createStatement();
                             rs = stmt.executeQuery("select location_id from location where location = '" + shelvingLocation + "'");
                             if (rs.next()) {
                                 locationId = rs.getInt(1);
@@ -744,7 +758,7 @@ public class MainFrame extends javax.swing.JFrame {
                                 }
                                 String columns = "accession_number, library_id, volume_id, material_type_id, location_id, barcode, book_number, classification_number, call_number, status, entry_id, entry_date, issue_details, entry_library_id, custom";
                                 try {
-                                    Statement insertStmt = con.createStatement();
+                                    Statement insertStmt = this.con.createStatement();
                                     System.out.println("INSERT INTO document(" + columns + ") VALUES (" + values + ")");
                                     insertStmt.executeUpdate("INSERT INTO document(" + columns + ") VALUES (" + values + ")");
                                     insertStmt.close();
@@ -762,19 +776,48 @@ public class MainFrame extends javax.swing.JFrame {
                 }
             }
             System.out.println("Successfully inserted");
+            con.commit();
             con.close();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        } catch (ClassNotFoundException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
-
+    
     public void saveRecord(CatalogMaterialDescription cmd, PersistMARCRecord psm) {
 //        System.out.println(cmd);
-        psm.persist3_0(cmd, "1", "3", "");
+        try {
+            Field field = cmd.getField("020");
+            String isbn = "";
+            if (field != null) {
+                SubField sf = field.getSubField('a');
+                if (sf != null) {
+                    isbn = sf.getData();
+                    isbn = getFilteredISBN(isbn);
+                }
+            }
+            SolrServer server = new CommonsHttpSolrServer("http://localhost:8080/apache-solr-bib");
+            SolrQuery query = new SolrQuery();
+            System.out.println("ISBN # " + isbn);
+            String filteredISBN = getFilteredISBN(isbn);
+            System.out.println("Filtered ISBN # " + filteredISBN);
+            if (filteredISBN != null && !filteredISBN.equals("")) {
+                query.setQuery("020_Text:" + filteredISBN);
+            }
+            System.out.println("Query ### " + query.toString());
+            query.setStart(0);
+            QueryResponse qresp = server.query(query);
+            SolrDocumentList docs = qresp.getResults();
+            if (docs.size() == 0) {
+                Hashtable ht = psm.persist3_0(cmd, "1", "3", "");
+                nbw.indexingOneRecordData(this.con,ht.get("Id").toString(), ht.get("LibId").toString());
+            } else {
+                System.out.println(" record already found");
+            }
+        } catch (Exception ex) {
+        }
+        
     }
-
+    
     public int countOccurrences(String haystack, char needle) {
         int count = 0;
         for (int i = 0; i < haystack.length(); i++) {
@@ -784,7 +827,7 @@ public class MainFrame extends javax.swing.JFrame {
         }
         return count;
     }
-
+    
     public String getFilteredISBN(String isbn) {
         String curedISBN = "";
         char[] chISBN = isbn.toCharArray();
@@ -795,12 +838,12 @@ public class MainFrame extends javax.swing.JFrame {
         }
         return curedISBN;
     }
-
+    
     public int getTotalRecords() {
-
+        
         int total = 0;
         SwingWorker sw = new SwingWorker() {
-
+            
             @Override
             protected Object doInBackground() throws Exception {
                 try {
@@ -834,7 +877,7 @@ public class MainFrame extends javax.swing.JFrame {
         }
         return total;
     }
-
+    
     public void refresh() {
         pbImportFile.setString("");
         pbImportFile.setValue(0);
@@ -847,7 +890,7 @@ public class MainFrame extends javax.swing.JFrame {
      */
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
-
+            
             public void run() {
                 new MainFrame().setVisible(true);
             }
@@ -896,22 +939,23 @@ public class MainFrame extends javax.swing.JFrame {
 }
 
 class newThread implements Runnable {
-
+    
     MainFrame mn;
 
     public newThread(MainFrame mn) {
         this.mn = mn;
-    }
 
+    }
+    
     @Override
     public void run() {
 //        throw new UnsupportedOperationException("Not supported yet.");
         mn.refresh();
         mn.jButton3.setEnabled(false);
         try {
-            Class.forName("org.postgresql.Driver");
+                        Class.forName("org.postgresql.Driver");
             Connection con = DriverManager.getConnection("jdbc:postgresql://" + mn.tfDBIPAddress.getText() + ":" + mn.tfDBPort.getText() + "/" + mn.tfDBName.getText(), mn.tfDBUsername.getText(), mn.tfDBPassword.getText());
-            PersistMARCRecord psm = new PersistMARCRecord("1", "1", "1", "1", "1", con, false);
+            PersistMARCRecord psm = new PersistMARCRecord("1", "1", "1", "1", "1", con, true);
             FileInputStream fis = new FileInputStream(mn.jTextField1.getText());
             XMLInputFactory factory = XMLInputFactory.newInstance();
             XMLStreamReader parser = factory.createXMLStreamReader(fis);
@@ -979,9 +1023,9 @@ class newThread implements Runnable {
                                     if (attrname.equals("ind2")) {
                                         i2 = aattrval;
                                     }
-
+                                    
                                 }
-
+                                
                                 char i1c = ' ';
                                 char i2c = ' ';
                                 if (i1.length() > 0) {
@@ -1003,7 +1047,7 @@ class newThread implements Runnable {
                                 currentSFIden = code.charAt(0);
                             } else if (nameele.equals("leader")) {
                                 currently = "leader";
-
+                                
                             }
 
 //                        System.out.println("Starting: "+parser.getLocalName());
@@ -1048,7 +1092,7 @@ class newThread implements Runnable {
                         if (currently.equals("leader")) {
                             currentLeader = parser.getText();
                         }
-
+                        
                         break;
                     case XMLStreamConstants.CDATA:
                         break;
@@ -1063,7 +1107,7 @@ class newThread implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        mn.indexDatabase();
+//        mn.indexDatabase();
         mn.jButton3.setEnabled(true);
         mn.refresh();
         //mn.jPanel8.setVisible(true);
