@@ -1,8 +1,8 @@
 ==What is NGL WorkBench?==
 NGL WorkBench is a NewGenLib Utility Application. This utility application has tools like
-#Printing patron cards
-#Printing barcode labels
-#Import patron data from XML and spread sheets
+  # Printing patron cards
+  # Printing barcode labels
+  # Import patron data from XML and spread sheets
 In the future, NGL WorkBench will have migration tools for various ILMS systems.
 ==Getting started with NGL WorkBench==
 ===Download===
