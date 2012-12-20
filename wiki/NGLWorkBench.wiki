@@ -1,3 +1,4 @@
+#summary NGL WorkBench
 ==What is NGL WorkBench?==
 NGL WorkBench is a NewGenLib Utility Application. This utility application has tools like
   # Printing patron cards
