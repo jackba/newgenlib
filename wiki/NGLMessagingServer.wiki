@@ -4,9 +4,9 @@ The purpose of NGL Messaging Server is to assist your NewGenLib Server to send E
 Hence in such cases where NewGenLib Server cannot send Emails to your EMail Server, you can take the assistance of NGL Messaging Server. NewGenLib Server sends Email via HTTP to the NGL Messaging Server and NGL Messaging Server dispatches the EMail to your Email Server using SMTP.
 ==Important pre-requisites in using NGL Messaging Server==
 Important pre-requisites to use NGL Messaging Server are
-*Your EMail Server must be available on the public domain or through a static IP. This is because NGL Messaging Server hosted on the web must be able to connect to your Email Server
-*Your Email Server must accept connections from NGL Messaging Server IP. It means, if your having a firewall protecting your Email Server make sure it allows NGL Messaging Server to connect
-*NewGenLib Server is connected to the Internet
+  * Your EMail Server must be available on the public domain or through a static IP. This is because NGL Messaging Server hosted on the web must be able to connect to your Email Server
+  * Your Email Server must accept connections from NGL Messaging Server IP. It means, if your having a firewall protecting your Email Server make sure it allows NGL Messaging Server to connect
+  * NewGenLib Server is connected to the Internet
 ==Getting started with NGL Messaging Server==
 ===Step 1: Get Free Verus Subscription Id from Verus Solutions===
 Send your Organization name and Address and Contact Person's name to support@verussolutions.biz. Verus Solutions will assign a subscription Id for your organization. An email with Subscription Id and Password will be sent to you via Email.
