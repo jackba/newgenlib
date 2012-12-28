@@ -66,3 +66,6 @@ password=XXXXX
 sender.name=ABC Library
 tls=true
 }}}
+
+ * Save your mail.properties
+ * Close Apache Tomcat Server and Start it again
