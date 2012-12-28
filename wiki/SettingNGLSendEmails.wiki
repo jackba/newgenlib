@@ -64,4 +64,5 @@ username=XXXX@gmail.com
 from=XXXX@gmail.com
 password=XXXXX
 sender.name=ABC Library
+tls=true
 }}}
