@@ -1,0 +1,14 @@
+#summary Steps to configure NGL to send Emails
+
+= Introduction =
+
+NGL dispatches Emails to your Users, Vendors, and Binders at various instances. For example: Check out slips to your Users, Purchase Orders to Vendors.
+You can configure NGL to connect to any SMTP Server this also includes Gmail SMTP server.
+
+
+= Details =
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
