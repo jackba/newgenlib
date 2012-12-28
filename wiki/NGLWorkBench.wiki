@@ -19,15 +19,15 @@ Step 3: Place NGLWorkBenchFiles directory in C: Drive (in /usr directory if you 
 
 Step 4: In C:/NGLWorkBenchFiles (For linux /usr/NGLWorkBenchFiles) directory you will find a file named database.properties. Open it with your favourite text editor. And edit the below values carefully
 {{{
-'''host=localhost'''
+host=localhost
 
-'''port=5432'''
+port=5432
 
-'''username=newgenlib'''
+username=newgenlib
 
-'''password=newgenlib'''
+password=newgenlib
 
-'''databaseName=newgenlib'''
+databaseName=newgenlib
 }}}
 Save the file.
 
