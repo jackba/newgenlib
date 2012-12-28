@@ -18,7 +18,7 @@ Step 2: If you extract the above zip file, you will get 2 directories. One is NG
 Step 3: Place NGLWorkBenchFiles directory in C: Drive (in /usr directory if you are on Linux). You can place NGLWorkBench directory anywhere
 
 Step 4: In C:/NGLWorkBenchFiles (For linux /usr/NGLWorkBenchFiles) directory you will find a file named database.properties. Open it with your favourite text editor. And edit the below values carefully
-
+{{{
 '''host=localhost'''
 
 '''port=5432'''
@@ -28,7 +28,7 @@ Step 4: In C:/NGLWorkBenchFiles (For linux /usr/NGLWorkBenchFiles) directory you
 '''password=newgenlib'''
 
 '''databaseName=newgenlib'''
-
+}}}
 Save the file.
 
 <u>''If you are installing on a client system, then make a note of the Server IP address. For example, if the server IP is 192.168.1.4, then instead of host=localhost put the IP address. Which means the line looks like this host=192.168.1.4''</u>
