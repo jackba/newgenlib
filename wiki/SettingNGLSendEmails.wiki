@@ -55,3 +55,13 @@ In the below property specify whether you want to use TLS. If you are using Gmai
 {{{
 tls=true
 }}}
+ * Placing everything together, your mail.properties must look something like this.
+{{{
+send.email.online=true
+host=smtp.gmail.com
+port=587
+username=XXXX@gmail.com
+from=XXXX@gmail.com
+password=XXXXX
+sender.name=ABC Library
+}}}
