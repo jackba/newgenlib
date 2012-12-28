@@ -6,9 +6,9 @@ NGL dispatches Emails to your Users, Vendors, and Binders at various instances. 
 You can configure NGL to connect to any SMTP Server this also includes Gmail SMTP server.
 
 
-= Details =
+= Pre-requisites =
+ * Your NGL Server must have Internet Connectivity
+ * NGL Server must be able to connect to your SMTP Server directly and not via a HTTP proxy
+ * Library must have an account in the Mail Server and the Mail Server must support SMTP (Simple Mail Transfer Protocol)
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+= Procedure to configure =
